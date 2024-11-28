@@ -3,6 +3,8 @@
 #include <EEPROM.h>
 #include <OneWire.h>
 
+int calisma_sayac_sifirla = 0;
+
 /* Saat Ayarlar */
 #define FLAGS_REGISTER 1
 #define HOUR_12_BIT 2
@@ -2940,39 +2942,34 @@ void sicaklik_guncelle()
   }
 }
 
+float sicaklik_olc(OneWire &ds, byte start)
+{
+  int16_t temp;
+  do
+  {
+    ds.reset();
+    ds.write(0XCC);
+    ds.write(0XBE);
+    ds.read_bytes((uint8_t *)&temp, sizeof(temp));
+    ds.reset();
+    ds.write(0xCC);
+    ds.write(0x44, 1);
+    if (start)
+    {
+      delay(500);
+    }
+  } while (start--);
+
+  return (temp * 0.0625);
+}
+
 void her_saniye_calisan()
 {
   if (millis() - millis_sakla > 1000)
   {
     if (genel_debug == 1)
     {
-      Serial.println("FILTRASYON Durum: " + String(filtre_durum));
-      Serial.println("ELEKTRO Guc: " + String(guc_acik));
-      Serial.println("ELEKTRO SET: " + String(uretim_hedef));
-      Serial.println("ELEKTRO URETIM: " + String(ekran_uretim));
-      Serial.println("PWM: " + String(akim_pwm));
-      Serial.println("AKIM SENSOR: " + String(akim_deger));
-      Serial.println("AKIM MINIMUM: " + String(minimum_akim));
-      Serial.println("ISIK Durum: " + String(isik_durum));
-      Serial.println("AUX1 Durum: " + String(aux1_durum));
-      Serial.println("AUX2 Durum: " + String(aux2_durum));
-      Serial.println("Calisma Sayaci : " + String(calisma_sayac));
-      Serial.println("Calisma Sayac Saat : " + String(calisma_saat));
-      Serial.println("Calisma Sayac EPROM : " + String(calisma_eprom));
-      Serial.println("Dil : " + String(dil));
-      Serial.println("Akis Sensor Aktif ? : " + String(akis_enable));
-      Serial.println("Flow Alarm : " + String(flow_alarm));
-      Serial.println("Polarite : " + String(polarite));
-      Serial.println("Polarite EPROM: " + String(polariteEprom));
-      Serial.println("AKIS:  " + String(akis_anlik));
-      Serial.println("Backwash Max : " + String(backwash_max));
-      Serial.println("Backwash RPM : " + String(backwash_rpm));
-      Serial.println("LOW ALARM: " + String(low_alarm));
-      Serial.println("BACKWASH ALARM: " + String(backwash_alarm));
-      Serial.println("FLOW ALARM: " + String(flow_alarm));
-      Serial.println("BACKWASH RPM: " + String(backwash_rpm));
-      Serial.println("BACKWASH MAX: " + String(backwash_max));
-      Serial.println("BACKWASH MEDIAN: " + String(backwash_median));
+      Serial.println("FILTRASYON: " + String(filtre_durum) + " - ELEK ACIK: " + String(guc_acik) + " - ELEK SET: " + String(uretim_hedef) + " - URETIM: " + String(ekran_uretim) + " - PWM: " + String(akim_pwm) + " - AKIM SENS: " + String(akim_deger) + " - AKIM MIN: " + String(minimum_akim) + " - CALISMA: " + String(calisma_saat) + " - AKIS ALARM: " + String(flow_alarm) + " - POLARITE: " + String(polarite) + " - AKIS: " + String(akis_anlik) + " - BACKW MAX: " + String(backwash_max) + " - BACK RPM: " + String(backwash_rpm) + " - BACK ALARM: " + String(backwash_alarm) + " - DUSUK ALARM: " + String(low_alarm));
       Serial.println("=============================");
     }
 
@@ -3345,27 +3342,6 @@ void polarite_baslangic()
       polarite_durum = 3;
     }
   }
-}
-
-float sicaklik_olc(OneWire &ds, byte start)
-{
-  int16_t temp;
-  do
-  {
-    ds.reset();
-    ds.write(0XCC);
-    ds.write(0XBE);
-    ds.read_bytes((uint8_t *)&temp, sizeof(temp));
-    ds.reset();
-    ds.write(0xCC);
-    ds.write(0x44, 1);
-    if (start)
-    {
-      delay(500);
-    }
-  } while (start--);
-
-  return (temp * 0.0625);
 }
 
 void setup()
