@@ -2333,11 +2333,49 @@ void hesaplamalar()
 
   if (filtre_durum == 1 || filtre_durum == 3)
   {
-    filtre_acik = 1;
+
+    if (sicaklik < sicaklik_2)
+    {
+      filtre_acik = 1;
+    }
+    else
+    {
+      filtre_acik = 0;
+      if (filtre_durum_sicaklik == 0)
+      {
+        filtre_durum_sicaklik = filtre_durum;
+        if (filtre_durum == 1)
+        {
+          filtre_durum = 0;
+          low_alarm = 0;
+        }
+        else if (filtre_durum == 3)
+        {
+          filtre_durum = 2;
+        }
+      }
+    }
   }
   else
   {
-    filtre_acik = 0;
+    if (sicaklik >= sicaklik_2)
+    {
+      filtre_acik = 0;
+      low_alarm = 0;
+    }
+    else
+    {
+      if (filtre_durum_sicaklik != 0)
+      {
+        filtre_durum = filtre_durum_sicaklik;
+        filtre_durum_sicaklik = 0;
+      }
+      else
+      {
+        filtre_acik = 0;
+        low_alarm = 0;
+      }
+    }
   }
 
   if ((filtre_acik == 1) && (flow_alarm == 1 || akis_enable == 0) && backwash_mod == 0)
@@ -3391,6 +3429,12 @@ void setup()
     EEPROM.update(100, 9);
   }
 
+  if (calisma_sayac_sifirla == 1)
+  {
+    EEPROM.update(48, 0);
+    calisma_sayac_sifirla = 0;
+  }
+
   hesaplanan_dakika = time.hours * 60 + time.minutes;
 
   eprom_oku();
@@ -3443,8 +3487,6 @@ void setup()
   update_version();
 
   polarite_baslangic();
-  // Çalışma saati sıfırla
-  // EEPROM.update(48, 0);
 }
 
 void loop()
