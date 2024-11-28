@@ -3148,12 +3148,9 @@ void her_saniye_calisan()
       low_alarm_guncelle(low_alarm);
     }
 
-    // sicaklik = sicaklik_olc(oneWire, 0);
-    if (sicaklik < 101)
-    {
-      sicaklik = sicaklik + 1;
-      sicaklik_guncelle();
-    }
+    sicaklik = sicaklik_olc(oneWire, 0);
+
+    sicaklik_guncelle();
 
     millis_sakla = millis();
   }
