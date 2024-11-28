@@ -2970,7 +2970,6 @@ void her_saniye_calisan()
     if (genel_debug == 1)
     {
       Serial.println("FILTRASYON: " + String(filtre_durum) + " - ELEK ACIK: " + String(guc_acik) + " - ELEK SET: " + String(uretim_hedef) + " - URETIM: " + String(ekran_uretim) + " - PWM: " + String(akim_pwm) + " - AKIM SENS: " + String(akim_deger) + " - AKIM MIN: " + String(minimum_akim) + " - CALISMA: " + String(calisma_saat) + " - AKIS ALARM: " + String(flow_alarm) + " - POLARITE: " + String(polarite) + " - AKIS: " + String(akis_anlik) + " - BACKW MAX: " + String(backwash_max) + " - BACK RPM: " + String(backwash_rpm) + " - BACK ALARM: " + String(backwash_alarm) + " - DUSUK ALARM: " + String(low_alarm));
-      Serial.println("=============================");
     }
 
     if ((filtre_acik == 1) && backwash_mod == 0 && uretim_hedef > 0)
