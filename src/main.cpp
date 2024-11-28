@@ -2966,11 +2966,11 @@ void sicaklik_guncelle()
     }
     else if (sicaklik > 70)
     {
-      komut_olustur(704);
+      komut_olustur(706);
     }
     else
     {
-      komut_olustur(703);
+      komut_olustur(704);
     }
     Serial1.write(ekrana_yolla, 8);
     int sicak = round(sicaklik);
@@ -3148,9 +3148,12 @@ void her_saniye_calisan()
       low_alarm_guncelle(low_alarm);
     }
 
-    sicaklik = sicaklik_olc(oneWire, 0);
-
-    sicaklik_guncelle();
+    // sicaklik = sicaklik_olc(oneWire, 0);
+    if (sicaklik < 101)
+    {
+      sicaklik = sicaklik + 1;
+      sicaklik_guncelle();
+    }
 
     millis_sakla = millis();
   }
