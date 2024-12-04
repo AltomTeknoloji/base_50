@@ -3533,7 +3533,6 @@ void setup()
   Serial1.begin(115200); // DWIN Lcd portu. 5V. SWD3
   Serial1.setTimeout(1);
   Serial2.begin(9600);
-  Serial3.setTimeout(1);
 
   Serial3.begin(9600);
   Serial3.setTimeout(1);
