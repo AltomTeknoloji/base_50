@@ -4,6 +4,9 @@
 #include <OneWire.h>
 
 int calisma_sayac_sifirla = 0;
+int slave = 0;
+int slave_eski = 0;
+int master_received = 0;
 
 /* Saat Ayarlar */
 #define FLAGS_REGISTER 1
@@ -61,7 +64,7 @@ int saat_debug = 0;  // Saat Debug icin 1 yapilacak
 int ekran_debug = 0; // LCD gelen data debug
 int akim_debug = 0;  // Akim debug icin
 int eprom_debug = 0; // Eprom degerleri debug icin
-int genel_debug = 1; // Genel Durum Debug0
+int genel_debug = 0; // Genel Durum Debug0
 /*Saat Degiskenleri*/
 uint32_t epochTime;
 uint32_t epochDate;
@@ -152,6 +155,7 @@ int akim_millis_sakla = 0;
 int backwash_millis = 0;
 int backwash_counter = 0;
 int millis_250 = 0;
+int millis_500 = 0;
 int zaman_cek = 0;         // Ekrandan set saat guncelle?
 int zaman_sayac = 0;       // Ekrandan set zaman cekme sayaci
 int ekran_yil = 0;         // Ekrandan gelen yil
@@ -1396,6 +1400,24 @@ void backwash_ekrana_gonder(int tim)
   backwash_median_resim++;
 }
 
+void update_uretim()
+{
+  Serial.println("URETIM HEDEF: " + String(uretim_hedef));
+  EEPROM.update(46, uretim_hedef);
+  uretim_hedef_guncelle = 1;
+  if (uretim_hedef == 0)
+  {
+    if (polarite == 1)
+    {
+      polarite_durum = 0;
+    }
+    else if (polarite == 2)
+    {
+      polarite_durum = 2;
+    }
+  }
+}
+
 void ekran_komut_isle(int address1, int address2, int data1, int data2)
 {
   if (adres_1 == 25)
@@ -1771,15 +1793,40 @@ void ekran_komut_isle(int address1, int address2, int data1, int data2)
     {
       backwash_ac();
     }
-    else if (adres_2 == 70 || adres_2 == 71)
+    else if (adres_2 == 70)
     {
       saat_gonder = 0;
+      if (dil == 0)
+      {
+        ekran_sayfa[9] = 2;
+        Serial1.write(ekran_sayfa, 11);
+      }
+      else if (dil == 1)
+      {
+        ekran_sayfa[9] = 33;
+        Serial1.write(ekran_sayfa, 11);
+      }
+    }
+    else if (adres_2 == 71)
+    {
+      saat_gonder = 0;
+      if (dil == 0)
+      {
+        ekran_sayfa[9] = 31;
+        Serial1.write(ekran_sayfa, 11);
+      }
+      else if (dil == 1)
+      {
+        ekran_sayfa[9] = 62;
+        Serial1.write(ekran_sayfa, 11);
+      }
     }
     else if (adres_2 == 72)
     {
       saat_gonder = 1;
       ekran_saat_set();
     }
+
     else if (adres_2 == 53)
     {
       backwash_max = 0;
@@ -1867,18 +1914,7 @@ void ekran_komut_isle(int address1, int address2, int data1, int data2)
     if (adres_2 == 69) // Uretim hedef geldi
     {
       uretim_hedef = data2 - 44;
-      EEPROM.update(46, uretim_hedef);
-      if (uretim_hedef == 0)
-      {
-        if (polarite == 1)
-        {
-          polarite_durum = 0;
-        }
-        else if (polarite == 2)
-        {
-          polarite_durum = 2;
-        }
-      }
+      update_uretim();
     }
     else if (adres_2 == 82)
     {
@@ -2923,6 +2959,28 @@ void polarite_degistir(int pol)
   }
 }
 
+void her_500_calisan()
+{
+  if (millis() - millis_500 > 500)
+  {
+    Serial.println("MASTER OK: " + String(master_received));
+    if (master_received > 0)
+    {
+      slave = 1;
+      master_received = 0;
+      EEPROM.update(66, 1);
+    }
+    else
+    {
+      slave = 0;
+      master_received = 0;
+      EEPROM.update(66, 0);
+    }
+
+    millis_500 = millis();
+  }
+}
+
 void her_250_calisan()
 {
   if (millis() - millis_250 > 240)
@@ -2935,6 +2993,7 @@ void her_250_calisan()
       }
     }
     ekran_yaz();
+
     millis_250 = millis();
   }
 }
@@ -3112,45 +3171,77 @@ void her_saniye_calisan()
       }
     }
 
-    if (zaman_cek == 1)
+    if (slave == 0)
     {
-      saat_tarih_oku();
-    }
+      if (zaman_cek == 1)
+      {
+        saat_tarih_oku();
+      }
 
-    if (filtre_timer_guncelle == 1)
-    {
-      filtre_oto_zaman_guncelle();
-    }
+      if (filtre_timer_guncelle == 1)
+      {
+        filtre_oto_zaman_guncelle();
+      }
 
-    if (isik_timer_guncelle == 1)
-    {
-      isik_oto_zaman_guncelle();
-    }
+      if (isik_timer_guncelle == 1)
+      {
+        isik_oto_zaman_guncelle();
+      }
 
-    if (aux1_timer_guncelle == 1)
-    {
-      aux1_oto_zaman_guncelle();
-    }
+      if (aux1_timer_guncelle == 1)
+      {
+        aux1_oto_zaman_guncelle();
+      }
 
-    if (aux2_timer_guncelle == 1)
-    {
-      aux2_oto_zaman_guncelle();
-    }
+      if (aux2_timer_guncelle == 1)
+      {
+        aux2_oto_zaman_guncelle();
+      }
 
-    if (akim_pwm > pwm_Max * 0.95)
-    {
-      low_alarm = 1;
-      low_alarm_guncelle(low_alarm);
-    }
-    else if (akim_pwm < pwm_Max * 0.9)
-    {
-      low_alarm = 0;
-      low_alarm_guncelle(low_alarm);
+      if (akim_pwm > pwm_Max * 0.95)
+      {
+        low_alarm = 1;
+        low_alarm_guncelle(low_alarm);
+      }
+      else if (akim_pwm < pwm_Max * 0.9)
+      {
+        low_alarm = 0;
+        low_alarm_guncelle(low_alarm);
+      }
     }
 
     sicaklik = sicaklik_olc(oneWire, 0);
 
     sicaklik_guncelle();
+    Serial.println("FILT: " + String(filtre_durum));
+    Serial.println("FILT ACIK: " + String(filtre_acik));
+
+    if (slave_eski != slave)
+    {
+      if (slave == 0)
+      {
+        if (filtre_durum == 2)
+        {
+          filtre_durum = 0;
+        }
+        else if (filtre_durum == 3)
+        {
+          filtre_durum = 1;
+        }
+        isik_durum = 0;
+        aux1_durum = 0;
+        aux2_durum = 0;
+        slave_eski = 0;
+      }
+      else if (slave == 1)
+      {
+        filtre_durum = 2;
+        isik_durum = 2;
+        aux1_durum = 2;
+        aux2_durum = 2;
+        slave_eski = 1;
+      }
+    }
 
     millis_sakla = millis();
   }
@@ -3334,6 +3425,12 @@ void eprom_oku()
     polarite = 1;
   }
 
+  if (EEPROM.read(66) > 1)
+  {
+    slave = 0;
+    EEPROM.update(66, 0);
+  }
+
   Serial.println("========== EPROM LOADED ==========");
 }
 
@@ -3381,6 +3478,51 @@ void polarite_baslangic()
   }
 }
 
+void master_oku()
+{
+  if (Serial2.available())
+  {
+    String receivedMessage = Serial2.readStringUntil('\n');
+    Serial.println("MASTER: " + receivedMessage);
+    receivedMessage.trim();
+
+    if (receivedMessage == "F1" || receivedMessage == "F0")
+    {
+      master_received++;
+      if (receivedMessage == "F1")
+      {
+        filtre_durum = 3;
+        filtre_acik = 1;
+      }
+      else if (receivedMessage == "F0")
+      {
+        filtre_durum = 2;
+        filtre_acik = 0;
+      }
+    }
+    else if (receivedMessage == "FILT OFF")
+    {
+      filtre_durum = 2;
+      filtre_acik = 0;
+    }
+    else if (receivedMessage == "FILT ON")
+    {
+      filtre_durum = 3;
+      filtre_acik = 1;
+    }
+    else if (receivedMessage.startsWith("URT: "))
+    {
+      {
+        String percentString = receivedMessage.substring(5);
+        float percent_change = percentString.toFloat();
+
+        uretim_hedef = (float)kapasite * (percent_change / 100);
+
+        update_uretim();
+      }
+    }
+  }
+}
 void setup()
 {
   EEPROM.init();
@@ -3390,8 +3532,10 @@ void setup()
   Serial.setTimeout(1);
   Serial1.begin(115200); // DWIN Lcd portu. 5V. SWD3
   Serial1.setTimeout(1);
-  Serial2.begin(1200);
-  Serial3.begin(19200);
+  Serial2.begin(9600);
+  Serial3.setTimeout(1);
+
+  Serial3.begin(9600);
   Serial3.setTimeout(1);
 
   rtc.begin();
@@ -3453,21 +3597,32 @@ void setup()
     flow_alarm_guncelle();
   }
 
-  if (filtre_durum == 2 || filtre_durum == 3)
+  if (slave == 1)
   {
-    filtre_oto_kontrol();
+    filtre_durum = 2;
+    isik_durum = 2;
+    aux1_durum = 2;
+    aux2_durum = 2;
   }
-  if (isik_durum == 2 || isik_durum == 3)
+
+  if (slave == 0)
   {
-    isik_oto_kontrol();
-  }
-  if (aux1_durum == 2 || aux1_durum == 3)
-  {
-    aux1_oto_kontrol();
-  }
-  if (aux2_durum == 2 || aux2_durum == 3)
-  {
-    aux2_oto_kontrol();
+    if (filtre_durum == 2 || filtre_durum == 3)
+    {
+      filtre_oto_kontrol();
+    }
+    if (isik_durum == 2 || isik_durum == 3)
+    {
+      isik_oto_kontrol();
+    }
+    if (aux1_durum == 2 || aux1_durum == 3)
+    {
+      aux1_oto_kontrol();
+    }
+    if (aux2_durum == 2 || aux2_durum == 3)
+    {
+      aux2_oto_kontrol();
+    }
   }
 
   delay(2000);
@@ -3487,6 +3642,8 @@ void setup()
   update_version();
 
   polarite_baslangic();
+
+  her_500_calisan();
 }
 
 void loop()
@@ -3505,10 +3662,19 @@ void loop()
     ekran_saat_set();
   }
   her_250_calisan();
+  her_500_calisan();
   her_saniye_calisan();
-  her_dakika_calisan();
+  if (slave == 0)
+  {
+    her_dakika_calisan();
+  }
   hesaplamalar();
   sensor_oku();
-  ekran_oku();
+  if (slave == 0)
+  {
+    ekran_oku();
+  }
+
+  master_oku();
   serial_oku();
 }
