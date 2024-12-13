@@ -3258,45 +3258,56 @@ void her_saniye_calisan()
 
 void her_dakika_calisan()
 {
-  if (time.minutes != time_save.minutes)
+  if (slave == 0)
   {
-    hesaplanan_dakika = time.hours * 60 + time.minutes;
-
-    if (filtre_durum == 2 || filtre_durum == 3)
+    if (time.minutes != time_save.minutes)
     {
-      filtre_oto_kontrol();
+      hesaplanan_dakika = time.hours * 60 + time.minutes;
+
+      if (filtre_durum == 2 || filtre_durum == 3)
+      {
+        filtre_oto_kontrol();
+      }
+
+      if (isik_durum == 2 || isik_durum == 3)
+      {
+        isik_oto_kontrol();
+      }
+
+      if (aux1_durum == 2 || aux1_durum == 3)
+      {
+        aux1_oto_kontrol();
+      }
+
+      if (aux2_durum == 2 || aux2_durum == 3)
+      {
+        aux2_oto_kontrol();
+      }
+
+      if (saat_gonder == 1)
+      {
+        ekran_saat_set();
+      }
+
+      if ((time.hours == 10 || time.hours == 13 || time.hours == 16 || time.hours == 19) && time.minutes == 1)
+      {
+        EEPROM.update(48, calisma_saat);
+      }
+
+      time_save.minutes = time.minutes;
     }
 
-    if (isik_durum == 2 || isik_durum == 3)
+    if (time.hours != time_save.hours)
     {
-      isik_oto_kontrol();
+      time_save.hours = time.hours;
     }
-
-    if (aux1_durum == 2 || aux1_durum == 3)
-    {
-      aux1_oto_kontrol();
-    }
-
-    if (aux2_durum == 2 || aux2_durum == 3)
-    {
-      aux2_oto_kontrol();
-    }
-
+  }
+  else if (slave == 1)
+  {
     if (saat_gonder == 1)
     {
       ekran_saat_set();
     }
-
-    if ((time.hours == 10 || time.hours == 13 || time.hours == 16 || time.hours == 19) && time.minutes == 1)
-    {
-      EEPROM.update(48, calisma_saat);
-    }
-
-    time_save.minutes = time.minutes;
-  }
-  if (time.hours != time_save.hours)
-  {
-    time_save.hours = time.hours;
   }
 }
 
@@ -3503,6 +3514,7 @@ void master_oku()
         filtre_durum = 3;
         filtre_acik = 1;
         prev_master_filt = 1;
+        Serial3.println();
       }
       else if (receivedMessage == "F0")
       {
@@ -3516,12 +3528,14 @@ void master_oku()
       filtre_durum = 2;
       filtre_acik = 0;
       prev_master_filt = 0;
+      Serial3.println("FILT OFF");
     }
     else if (receivedMessage == "FILT ON")
     {
       filtre_durum = 3;
       filtre_acik = 1;
       prev_master_filt = 1;
+      Serial3.println("FILT ON");
     }
     else if (receivedMessage.startsWith("URT: "))
     {
@@ -3530,6 +3544,7 @@ void master_oku()
         float percent_change = percentString.toFloat();
 
         uretim_hedef = (float)kapasite * (percent_change / 100);
+        Serial3.println("URT: " + String(percent_change));
 
         update_uretim();
       }
@@ -3547,9 +3562,7 @@ void setup()
   Serial1.begin(115200); // DWIN Lcd portu. 5V. SWD3
   Serial1.setTimeout(1);
   Serial2.begin(9600);
-
   Serial3.begin(9600);
-  Serial3.setTimeout(1);
 
   rtc.begin();
   isHour12 = IS_HOUR_12(rtc);
@@ -3677,10 +3690,7 @@ void loop()
   her_250_calisan();
   her_500_calisan();
   her_saniye_calisan();
-  if (slave == 0)
-  {
-    her_dakika_calisan();
-  }
+  her_dakika_calisan();
   hesaplamalar();
   sensor_oku();
   if (slave == 0)
