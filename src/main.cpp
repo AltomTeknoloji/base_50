@@ -3241,6 +3241,16 @@ void her_saniye_calisan()
         aux1_durum = 0;
         aux2_durum = 0;
         slave_eski = 0;
+        if (dil == 0)
+        {
+          ekran_sayfa[9] = 1;
+          ekran_sayfa_degistir();
+        }
+        else if (dil == 1)
+        {
+          ekran_sayfa[9] = 32;
+          ekran_sayfa_degistir();
+        }
       }
       else if (slave == 1)
       {
@@ -3249,6 +3259,16 @@ void her_saniye_calisan()
         aux1_durum = 2;
         aux2_durum = 2;
         slave_eski = 1;
+        if (dil == 0)
+        {
+          ekran_sayfa[9] = 1;
+          ekran_sayfa_degistir();
+        }
+        else if (dil == 1)
+        {
+          ekran_sayfa[9] = 32;
+          ekran_sayfa_degistir();
+        }
       }
     }
 
@@ -3691,6 +3711,7 @@ void loop()
   her_500_calisan();
   her_saniye_calisan();
   her_dakika_calisan();
+
   hesaplamalar();
   sensor_oku();
   if (slave == 0)
