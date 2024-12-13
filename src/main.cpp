@@ -7,6 +7,7 @@ int calisma_sayac_sifirla = 0;
 int slave = 0;
 int slave_eski = 0;
 int master_received = 0;
+int prev_master_filt = 0;
 
 /* Saat Ayarlar */
 #define FLAGS_REGISTER 1
@@ -2975,6 +2976,14 @@ void her_500_calisan()
       slave = 0;
       master_received = 0;
       EEPROM.update(66, 0);
+      if (prev_master_filt == 0)
+      {
+        filtre_durum = 0;
+      }
+      else if (prev_master_filt == 1)
+      {
+        filtre_durum = 1;
+      }
     }
 
     millis_500 = millis();
@@ -3493,22 +3502,26 @@ void master_oku()
       {
         filtre_durum = 3;
         filtre_acik = 1;
+        prev_master_filt = 1;
       }
       else if (receivedMessage == "F0")
       {
         filtre_durum = 2;
         filtre_acik = 0;
+        prev_master_filt = 0;
       }
     }
     else if (receivedMessage == "FILT OFF")
     {
       filtre_durum = 2;
       filtre_acik = 0;
+      prev_master_filt = 0;
     }
     else if (receivedMessage == "FILT ON")
     {
       filtre_durum = 3;
       filtre_acik = 1;
+      prev_master_filt = 1;
     }
     else if (receivedMessage.startsWith("URT: "))
     {
@@ -3523,6 +3536,7 @@ void master_oku()
     }
   }
 }
+
 void setup()
 {
   EEPROM.init();
